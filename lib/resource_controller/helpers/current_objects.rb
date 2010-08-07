@@ -5,6 +5,7 @@ module ResourceController
         # Used internally to return the model for your resource.  
         #
         def model
+          puts "getting model"
           model_name.to_s.camelize.constantize
         end
 
@@ -14,6 +15,7 @@ module ResourceController
         # In order to customize the way the collection is fetched, to add something like pagination, for example, override this method.
         #
         def collection
+          puts "getting collection"
           end_of_association_chain.find(:all)
         end
     
@@ -24,6 +26,7 @@ module ResourceController
         # Override this method if you'd like to use an alternate param name.
         #
         def param
+          puts "getting param"
           params[:id]
         end
   
@@ -39,6 +42,7 @@ module ResourceController
         #   end
         #
         def object
+          puts "getting object"
           @object ||= end_of_association_chain.find(param) unless param.nil?
           @object
         end

@@ -7,59 +7,79 @@ module ResourceController
         # Returns the relevant association proxy of the parent. (i.e. /posts/1/comments # => @post.comments)
         #
         def parent_association
+          puts "getting parent assoc"
           @parent_association ||= parent_object.send(model_name.to_s.pluralize.to_sym)
         end
     
         # Returns the type of the current parent
         #
         def parent_type
-          @parent_type ||= parent_type_from_params || parent_type_from_request
+          puts "getting parent type"
+          @parent_type ||= parent_type_from_params || parent_type_from_request || parent_type_from_object
         end
     
         # Returns the type of the current parent extracted from params
         #    
         def parent_type_from_params
+          puts "getting parent type from params"
           [*belongs_to].find { |parent| !params["#{parent}_id".to_sym].nil? }
         end
     
         # Returns the type of the current parent extracted form a request path
         #    
         def parent_type_from_request
+          puts "getting parent type from request"
           [*belongs_to].find { |parent| request.path.split('/').include? parent.to_s }
+        end
+        
+        # Returns the type of the current parent extracted from the object
+        #
+        def parent_type_from_object
+          puts "getting parent type from object"
+          #we can't just call object here. It will look for the end of association chain, which creates an infinite loop
+          @object ||= model.find(param) unless param.nil?
+          puts @object.inspect
+          [*belongs_to].find { |parent| @object.respond_to? parent.to_s }
         end
     
         # Returns true/false based on whether or not a parent is present.
         #
         def parent?
+          puts "checking parent?"
           !parent_type.nil?
         end
     
         # Returns true/false based on whether or not a parent is a singleton.
         #    
         def parent_singleton?
+          puts "checking parent_singleton?"
           !parent_type_from_request.nil? && parent_type_from_params.nil?
         end
     
         # Returns the current parent param, if there is a parent. (i.e. params[:post_id])
         def parent_param
-          params["#{parent_type}_id".to_sym]
+          puts "getting parent_param"
+          @parent_param ||= params["#{parent_type}_id".to_sym] || object.send(parent_type)
         end
     
         # Like the model method, but for a parent relationship.
         # 
         def parent_model
+          puts "getting parent_model"
           parent_type.to_s.camelize.constantize
         end
     
         # Returns the current parent object if a parent object is present.
         #
         def parent_object
+          puts "getting parent_object"
           parent? && !parent_singleton? ? parent_model.find(parent_param) : nil
         end
     
         # If there is a parent, returns the relevant association proxy.  Otherwise returns model.
         #
         def end_of_association_chain
+          puts "getting end_of_assoc_chain"
           parent? ? parent_association : model
         end
     end
